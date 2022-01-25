@@ -1,0 +1,21 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t fossomickael/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=TRUE fossomickael/react-test npm test
+
+after_success:
+  - docker build -t fossomickael/multi-client ./client
+  - docker build -t fossomickael/multi-nginx ./nginx
+  - docker build -t fossomickael/multi-server ./server
+  - docker build -t fossomickael/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push fossomickael/multi-client
+  - docker push fossomickael/multi-nginx
+  - docker push fossomickael/multi-server
+  - docker push fossomickael/multi-worker
